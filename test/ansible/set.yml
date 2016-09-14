@@ -1,0 +1,83 @@
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: set a simple value
+      yedit:
+        content: {}
+        key: roundtrips
+        value: 2
+      register: res
+    - set_fact: res={{ res.result }}
+    - assert:
+        that: res.roundtrips == 2
+
+    - name: set a yml-dict as value
+      yedit:
+        content: {}
+        key: name
+        value:
+          first: john
+          last: doe
+      register: res
+    - set_fact: res={{ res.result }}
+    - assert:
+        that:
+          - res.name is mapping
+          - res.name.first == 'john'
+          - res.name.last == 'doe'
+
+    - name: set a json-dict as value
+      yedit:
+        content: {}
+        key: name
+        value: { 'first': 'john', 'last': 'doe' }
+      register: res
+    - set_fact: res={{ res.result }}
+    - assert:
+        that:
+          - res.name is mapping
+          - res.name.first == 'john'
+          - res.name.last == 'doe'
+
+    - name: set as a string, no matter what is given
+      yedit:
+        content: {}
+        key: foobar
+        value_type: str
+        value: { thisisjson: "but gets saved as a string" }
+      register: res
+    - set_fact: res={{ res.result }}
+    - set_fact:
+        expected: "{'thisisjson': 'but gets saved as a string'}"
+    - assert:
+        that: res.foobar == expected
+
+    - name: set a value within an existing dictionary
+      yedit:
+        key: occupation#pay
+        content:
+          name: Johanna Doe
+          age: 42
+          occupation:
+            name: doctor
+            pay: 999
+        value: 1000
+      register: res
+    - set_fact: res={{ res.result }}
+    - assert:
+        that: res.occupation.pay == 1000
+
+    - name: replace apples by kiwi
+      yedit:
+        update: yes
+        index: 1
+        value: 'kiwi'
+        content: [ 'oranges', 'apples' ]
+      register: res
+    - debug: var=res
+    - set_fact: res={{ res.result }}
+    - assert:
+        that:
+          - res|length == 2
+          - res == [ 'oranges', 'kiwi' ]

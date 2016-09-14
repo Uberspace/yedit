@@ -1,0 +1,16 @@
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: add oranges to the end
+      yedit:
+        append: yes
+        content: [ 'kiwi', 'peppers' ]
+        value: oranges
+      register: res
+    - set_fact: res={{ res.result }}
+    - assert:
+        that: len(res) == 3
+        that: res[0] == 'kiwi'
+        that: res[1] == 'peppers'
+        that: res[2] == 'oranges'

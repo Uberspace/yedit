@@ -1,0 +1,43 @@
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: remove the last name
+      yedit:
+        key: name#last
+        state: absent
+        content:
+          name:
+            first: Johanna
+            last: Doe
+          age: 42
+      register: res
+    - set_fact: res={{ res.result }}
+    - assert:
+        that: res.name.last is not defined
+
+    - name: remove apples from the grocery list, by index
+      yedit:
+        state: absent
+        update: yes
+        index: 1
+        content: [ 'oranges', 'apples' ]
+      register: res
+    - debug: var=res
+    - set_fact: res={{ res.result }}
+    - assert:
+        that:
+          - res|length == 1
+          - res == [ 'oranges' ]
+
+    - name: remove apples from the grocery list, by name
+      yedit:
+        state: absent
+        update: yes
+        key: groceries
+        value: apples
+        content:
+          - 'oranges'
+          - 'apples'
+      register: res
+    - debug: var=res

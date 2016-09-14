@@ -1,0 +1,13 @@
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - file: path=/tmp/test.yaml state=absent
+    - name: save my grocery shopping list
+      yedit:
+        src: /tmp/test.yaml
+        content: [ 'apples', 'oranges' ]
+    - set_fact:
+        content: "{{ lookup('file', '/tmp/test.yaml') }}"
+    - assert:
+        that: content == "- apples\n- oranges"
